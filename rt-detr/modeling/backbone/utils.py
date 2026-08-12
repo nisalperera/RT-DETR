@@ -3,7 +3,7 @@ https://github.com/pytorch/vision/blob/main/torchvision/models/_utils.py
 """
 
 from collections import OrderedDict
-from typing import Dict, List
+from typing import List, Dict
 
 
 import torch.nn as nn 
@@ -25,12 +25,15 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
     _version = 3
 
-    def __init__(self, model: nn.Module, return_layers: List[str]) -> None:
+    def __init__(self, model: nn.Module, return_layers: List[str] | Dict[str, str]) -> None:
         if not set(return_layers).issubset([name for name, _ in model.named_children()]):
             raise ValueError("return_layers are not present in model. {}"\
                 .format([name for name, _ in model.named_children()]))
         orig_return_layers = return_layers
-        return_layers = {str(k): str(k)  for k in return_layers}
+        
+        if not isinstance(return_layers, dict):
+            return_layers = {str(k): str(k)  for k in return_layers}
+
         layers = OrderedDict()
         for name, module in model.named_children():
             layers[name] = module
