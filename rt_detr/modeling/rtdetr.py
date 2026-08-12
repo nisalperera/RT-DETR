@@ -23,7 +23,6 @@ from torchvision.ops.boxes import box_iou
 from torchvision.ops import complete_box_iou_loss as ciou_loss, distance_box_iou_loss as diou_loss
 
 from .box_regression import RTDETRBox2BoxTransform
-from .decoder import Decoder
 from .encoder import DilatedEncoder
 from .uniform_matcher import UniformMatcher
 

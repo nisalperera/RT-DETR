@@ -409,10 +409,8 @@ class DLANet(Backbone):
         levels=[1, 1, 1, 2, 2, 1],
         in_channels=[16, 32, 64, 128, 256, 512],
         return_index = [1, 2, 3],
-        cfg=None,
     ):
         super(DLANet, self).__init__()
-        self.cfg = cfg
         self.in_channels = in_channels
 
         self.model = eval(dla)(
@@ -459,6 +457,20 @@ def build_dla_backbone(cfg):
         levels=cfg.MODEL.BACKBONE.LEVELS,
         in_channels=cfg.MODEL.BACKBONE.IN_CHANNELS,
         return_index=cfg.MODEL.BACKBONE.RETURN_INDEX,
-        cfg=cfg
     )
     return model
+
+
+if __name__ == "__main__":
+    from rt_detr.config import get_cfg
+
+    cfg = get_cfg()
+    cfg.set_new_allowed(True)
+
+    cfg.MODEL.BACKBONE.DLA = "dla34"
+    cfg.MODEL.BACKBONE.PRETRAINED = False
+    cfg.MODEL.BACKBONE.LEVELS = [1, 1, 1, 2, 2, 1]
+    cfg.MODEL.BACKBONE.IN_CHANNELS = [16, 32, 64, 128, 256, 512]
+    cfg.MODEL.BACKBONE.RETURN_INDEX = [1, 2, 3]
+
+    print(build_dla_backbone(cfg))
