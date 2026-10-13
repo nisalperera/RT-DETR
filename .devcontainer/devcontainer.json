@@ -1,6 +1,7 @@
 {
   "name": "RT-DETR",
   "build": {
+    "cacheFrom": "rt-detr:latest",
     "context": "${localWorkspaceFolder}",
     "dockerfile": "${localWorkspaceFolder}/docker/Dockerfile",
     "args": {

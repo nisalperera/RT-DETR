@@ -2,7 +2,7 @@ ARG CUDA_VERSION=12.8.1
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu22.04
 
 # Re-declare build arg after FROM so it is available in this stage.
-ARG CUDA_VERSION=12.8.1
+ARG CUDA_VERSION
 
 LABEL maintainer="Nisal Perera"
 
@@ -81,37 +81,7 @@ ARG HOME=/home/${USER}
 ENV HOME=${HOME}
 WORKDIR ${HOME}
 
-COPY wheels/ ${HOME}/tmp/
-
-RUN if [ -f "${HOME}/tmp/pytorch_wheels.zip" ]; then \
-        sudo mkdir -p "${HOME}/tmp/pytorch_wheels" && \
-        sudo unzip -o "${HOME}/tmp/pytorch_wheels.zip" -d "${HOME}/tmp/pytorch_wheels"; \
-    fi
-
-RUN if [ -f "${HOME}/tmp/wheels.zip" ]; then \
-        sudo mkdir -p "${HOME}/tmp/wheels" && \
-        sudo unzip -o "${HOME}/tmp/wheels.zip" -d "${HOME}/tmp/wheels"; \
-    fi
-
-# Install PyTorch (as non-root user)
-SHELL ["/bin/bash", "-c"]
-RUN IFS='.' read -r MAJOR MINOR _ <<< "$CUDA_VERSION" && \
-    CUDA_VERSION_NO_DOT="${MAJOR}${MINOR}" && \
-    if [ -d "${HOME}/tmp/pytorch_wheels" ] && compgen -G "${HOME}/tmp/pytorch_wheels/*.whl" > /dev/null; then \
-        python3 -m pip install --no-cache-dir --no-index --find-links "${HOME}/tmp/pytorch_wheels" \
-            torch==${TORCH_VERSION}+cu${CUDA_VERSION_NO_DOT} \
-            torchvision==${TORCHVISION_VERSION}+cu${CUDA_VERSION_NO_DOT}; \
-    else \
-        python3 -m pip install --no-cache-dir \
-            torch==${TORCH_VERSION}+cu${CUDA_VERSION_NO_DOT} \
-            torchvision==${TORCHVISION_VERSION}+cu${CUDA_VERSION_NO_DOT} \
-            --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION_NO_DOT}; \
-    fi
-SHELL ["/bin/sh", "-c"]
-
-# Install Python dependencies from git repos
-RUN python3 -m pip install --no-cache-dir 'git+https://github.com/JunnYu/mish-cuda.git' && \
-    python3 -m pip install --no-cache-dir 'git+https://github.com/facebookresearch/detectron2.git'
+RUN python3 -m pip install --upgrade pip
 
 # Replace pillow with pillow-simd
 RUN python3 -m pip uninstall pillow -y && \
@@ -119,20 +89,13 @@ RUN python3 -m pip uninstall pillow -y && \
 
 # Install requirements.txt BEFORE copying code (better caching)
 COPY  --chown=${UID}:${GID} requirements.txt /tmp/requirements.txt
-# RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
-
-RUN if [ -d "${HOME}/tmp/wheels" ] && compgen -G "${HOME}/tmp/wheels/*.whl" > /dev/null; then \
-        python3 -m pip install --no-cache-dir --no-index --find-links "${HOME}/tmp/wheels" \
-        -r /tmp/requirements.txt; \
-    else \
-        python3 -m pip install --no-cache-dir -r /tmp/requirements.txt; \
-    fi
+RUN python3 -m pip install -r /tmp/requirements.txt
 
 # Copy application code (use --chown to avoid extra layer)
 COPY  --chown=${UID}:${GID} . ${HOME}/RT-DETR
 
 # Install RT-DETR package
-RUN python3 -m pip install --no-cache-dir -e ${HOME}/RT-DETR
+RUN python3 -m pip install -e ${HOME}/RT-DETR
 
 ARG WANDB_API_KEY
 ENV WANDB_API_KEY=${WANDB_API_KEY}

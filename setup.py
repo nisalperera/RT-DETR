@@ -1,5 +1,6 @@
 from setuptools import find_packages, setup
 import subprocess
+import sys
 
 def detect_cuda_version():
     """Detect CUDA version from nvcc --version"""
@@ -22,6 +23,22 @@ def detect_cuda_version():
         pass
     
     return None
+
+def get_installed_pytorch_version():
+    version = []
+    try:
+        import torch
+        version.append(torch.__version__)
+    except ImportError:
+        version.append(None)
+
+    try:
+        import torchvision
+        version.append(torchvision.__version__)
+    except ImportError:
+        version.append(None)
+
+    return tuple(version)
 
 def get_numpy_version(pytorch_version):
     """
@@ -76,14 +93,53 @@ def get_pytorch_and_torchvision_versions(cuda_version):
     # Default to CPU version if CUDA not detected
     return ("2.5.0", "0.20.0", "cpu")
 
+def is_installed_detectron2():
+    try:
+        import detectron2
+        return True
+    except ImportError:
+        return False
+
+
+def is_installed_mish_cuda():
+    try:
+        import mish_cuda
+        return True
+    except ImportError:
+        return False
+
 # Detect CUDA version
 cuda_version = detect_cuda_version()
 pytorch_version, torchvision_version, cuda_index = get_pytorch_and_torchvision_versions(cuda_version)
+installed_pytorch_version, installed_torchvision_version = get_installed_pytorch_version()
 numpy_version = get_numpy_version(pytorch_version)
+is_installed_d2 = is_installed_detectron2()
+is_installed_mish = is_installed_mish_cuda()
+install_requires = [numpy_version]
 
 print(f"Detected CUDA Version: {cuda_version if cuda_version else 'Not found (will use CPU)'}")
-print(f"Installing PyTorch {pytorch_version} and torchvision {torchvision_version} for {cuda_index}")
+print(f"Installed PyTorch Version: {installed_pytorch_version if installed_pytorch_version else 'Not installed'}")
+print(f"Installed torchvision Version: {installed_torchvision_version if installed_torchvision_version else 'Not installed'}")
+if installed_pytorch_version and installed_pytorch_version == pytorch_version:
+    print(f"Using installed PyTorch version: {installed_pytorch_version}")
+else:
+    install_requires.append(f"torch=={pytorch_version}")
+
+if installed_torchvision_version and installed_torchvision_version == torchvision_version:
+    print(f"Using installed torchvision version: {installed_torchvision_version}")
+else:
+    install_requires.append(f"torchvision=={torchvision_version}")
+
+print(f"Installing {install_requires[1]} and {install_requires[2]} for {cuda_index}")
 print(f"Installing numpy {numpy_version}")
+
+if not is_installed_mish:
+    print("Installing mish-cuda from GitHub")
+    install_requires.append("git+https://github.com/JunnYu/mish-cuda.git")
+
+if not is_installed_d2:
+    print("Installing detectron2 from GitHub")
+    install_requires.append("git+https://github.com/facebookresearch/detectron2.git")
 
 # Build the index URL based on CUDA version
 if cuda_index == "cpu":
