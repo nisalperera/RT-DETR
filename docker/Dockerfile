@@ -2,7 +2,7 @@ ARG CUDA_VERSION=12.8.1
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu22.04
 
 # Re-declare build arg after FROM so it is available in this stage.
-ARG CUDA_VERSION
+ARG CUDA_VERSION=12.8.1
 
 LABEL maintainer="Nisal Perera"
 
@@ -89,6 +89,7 @@ RUN python3 -m pip uninstall pillow -y && \
 
 # Install requirements.txt BEFORE copying code (better caching)
 COPY  --chown=${UID}:${GID} requirements.txt /tmp/requirements.txt
+
 RUN python3 -m pip install -r /tmp/requirements.txt
 
 # Copy application code (use --chown to avoid extra layer)

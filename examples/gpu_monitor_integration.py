@@ -93,7 +93,7 @@ def example_training_integration():
     print("=" * 70)
     
     trainer = TrainingWithGPUMonitor(
-        model_name="RT-DETR_Demo",
+        model_name="RT-DETR-Demo",
         num_epochs=3
     )
     

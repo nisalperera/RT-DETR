@@ -2,4 +2,4 @@ wandb
 weave
 scipy
 opencv-python
-# pyhessian
+pyhessian

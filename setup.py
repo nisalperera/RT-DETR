@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 import subprocess
-import sys
+
 
 def detect_cuda_version():
     """Detect CUDA version from nvcc --version"""
@@ -39,6 +39,7 @@ def get_installed_pytorch_version():
         version.append(None)
 
     return tuple(version)
+
 
 def get_numpy_version(pytorch_version):
     """
